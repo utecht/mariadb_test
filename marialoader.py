@@ -1,4 +1,5 @@
 from rdflib import Graph
+import pymysql
 
 g = Graph()
 g.parse('all.turtle', format='turtle')
@@ -24,9 +25,57 @@ where {
     optional { ?sid ub:telephone ?telephone } .
     optional { ?sid ub:advisor ?advisor }
 }"""
-
+connection = pymysql.connect(host='localhost',user='root',db='benchmark',cursorclass=pymysql.cursors.DictCursor)
+c = connection.cursor()
 insert_students = """
-insert into students values ({}, {}, {}, {}, {})
+insert into students values ("{}", "{}", "{}", "{}", "{}")
 """
 for b in g.query(grad_students).bindings:
-    print(insert_students.format(b['?sid'], b['?name'], b['?email'], b['telephone'], b['advisor'])
+    sid, name, email, telephone, advisor = '', '', '', '', ''
+    try:
+        sid = b['?sid'].lower()
+    except:
+        pass
+    try:
+        name = b['?name'].value
+    except:
+        pass
+    try:
+        email = b['?email'].value
+    except:
+        pass
+    try:
+        telephone = b['?telephone'].value
+    except:
+        pass
+    try:
+        advisor = b['?advisor'].value
+    except:
+        pass
+    c.execute(insert_students.format(sid, name, email, telephone, advisor))
+    connection.commit()
+
+for b in g.query(under_students).bindings:
+    sid, name, email, telephone, advisor = '', '', '', '', ''
+    try:
+        sid = b['?sid'].lower()
+    except:
+        pass
+    try:
+        name = b['?name'].value
+    except:
+        pass
+    try:
+        email = b['?email'].value
+    except:
+        pass
+    try:
+        telephone = b['?telephone'].value
+    except:
+        pass
+    try:
+        advisor = b['?advisor'].value
+    except:
+        pass
+    c.execute(insert_students.format(sid, name, email, telephone, advisor))
+    connection.commit()
